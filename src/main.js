@@ -97,7 +97,7 @@ function selectSlot(i) {
 function openInventory() {
   if (inventoryOpen || dead) return;
   inventoryOpen = true;
-  document.exitPointerLock();   // free the cursor so you can click recipe buttons
+  if (document.exitPointerLock) document.exitPointerLock(); // free the cursor for recipe clicks
   hud.openInventory();
   hud.updateInventoryScreen(weapons, crafting, RECIPES);
 }
@@ -355,8 +355,15 @@ function followSun() {
 // that rejects (e.g. Chrome's short cooldown right after you press Esc) — that's
 // harmless, so we swallow it.
 const overlay = document.getElementById('overlay');
+
+// Pointer Lock (mouse-look) isn't available on touch devices like iOS Safari.
+// This is a keyboard + mouse game, so detect that and show a friendly message
+// instead of throwing when someone opens it on a phone.
+const pointerLockSupported = !!(canvas.requestPointerLock || canvas.webkitRequestPointerLock);
+
 function lockPointer() {
   Audio.init(); // first user gesture — create/resume the audio context
+  if (!canvas.requestPointerLock) return; // unsupported (mobile) -> no-op
   const p = canvas.requestPointerLock();
   if (p && typeof p.catch === 'function') p.catch(() => {});
 }
@@ -367,6 +374,16 @@ document.addEventListener('pointerlockchange', () => {
   // Don't show the "click to play" overlay while the inventory screen is up.
   overlay.style.display = (!locked && !inventoryOpen) ? 'flex' : 'none';
 });
+
+if (!pointerLockSupported) {
+  overlay.innerHTML =
+    '<div style="max-width:560px;padding:28px;text-align:center;line-height:1.6">' +
+    '<h1 style="font-size:30px;letter-spacing:1px;margin-bottom:14px">DRAKESHOT</h1>' +
+    '<p style="font-size:16px;opacity:0.92">This is a keyboard &amp; mouse game — phones and ' +
+    'tablets can\'t capture the pointer it needs.<br><br>Open it on a <b>desktop or laptop browser</b> to play.</p>' +
+    '</div>';
+  overlay.style.display = 'flex';
+}
 
 // --- resize -----------------------------------------------------------------
 window.addEventListener('resize', () => {
