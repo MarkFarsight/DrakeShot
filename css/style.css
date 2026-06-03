@@ -1,0 +1,267 @@
+/* ===========================================================================
+   Global / HUD styles. Game canvas fills the window; everything else is an
+   overlay drawn on top of it.
+   =========================================================================== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #87b8e8;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #fff;
+  user-select: none;
+}
+
+#game { display: block; width: 100%; height: 100%; }
+
+/* Crosshair in the centre of the screen. */
+#crosshair {
+  position: fixed;
+  left: 50%; top: 50%;
+  width: 18px; height: 18px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0.85;
+}
+#crosshair::before, #crosshair::after {
+  content: ""; position: absolute; background: #fff;
+  box-shadow: 0 0 2px rgba(0,0,0,0.8);
+}
+#crosshair::before { left: 50%; top: 0; width: 2px; height: 100%; transform: translateX(-50%); }
+#crosshair::after  { top: 50%; left: 0; height: 2px; width: 100%; transform: translateY(-50%); }
+
+/* "Click to play" overlay shown whenever the pointer is not locked. */
+#overlay {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 14px;
+  background: rgba(10, 20, 30, 0.55);
+  backdrop-filter: blur(2px);
+  text-align: center;
+  cursor: pointer;
+  z-index: 10;
+}
+#overlay h1 { font-size: 34px; letter-spacing: 1px; text-shadow: 0 2px 6px rgba(0,0,0,0.6); }
+#overlay .hint { font-size: 16px; opacity: 0.9; line-height: 1.7; }
+#overlay .play {
+  margin-top: 6px; padding: 10px 22px; font-size: 18px; font-weight: 600;
+  border: 2px solid #fff; border-radius: 8px; background: rgba(255,255,255,0.08);
+}
+kbd {
+  display: inline-block; min-width: 20px; padding: 1px 6px; margin: 0 1px;
+  border: 1px solid rgba(255,255,255,0.6); border-bottom-width: 2px; border-radius: 5px;
+  font-family: inherit; font-size: 13px; background: rgba(255,255,255,0.1);
+}
+
+/* Inventory bar (bottom-centre). pointer-events:none so it never eats clicks. */
+#hud {
+  position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+  display: flex; gap: 8px; pointer-events: none; z-index: 5;
+}
+.slot {
+  position: relative;
+  width: 60px; padding: 8px 4px 5px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  background: rgba(0, 0, 0, 0.38);
+  border: 2px solid rgba(255, 255, 255, 0.22); border-radius: 8px;
+}
+.slot.selected { border-color: #fff; box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); }
+.slot.gun-slot.selected { border-color: #ffd86e; box-shadow: 0 0 12px rgba(255, 216, 110, 0.7); }
+.slot .key { position: absolute; top: 2px; left: 5px; font-size: 10px; font-weight: 700; opacity: 0.55; }
+.slot .icon {
+  width: 30px; height: 30px; border-radius: 4px; border: 1px solid rgba(0, 0, 0, 0.4);
+}
+/* gun-slot icon: a tiny stylised pistol */
+.slot .gun-icon { background: #20242a; position: relative; overflow: hidden; }
+.slot .gun-icon::before {
+  content: ""; position: absolute; top: 7px; left: 4px;
+  width: 22px; height: 7px; background: #50555c; border-radius: 1px;
+}
+.slot .gun-icon::after {
+  content: ""; position: absolute; top: 13px; left: 7px;
+  width: 7px; height: 11px; background: #6b4a2b; border-radius: 1px;
+}
+.slot .count { font-size: 14px; font-weight: 700; text-shadow: 0 1px 2px #000; min-height: 16px; }
+.slot .name {
+  font-size: 10px; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.4px;
+}
+
+/* Inventory + crafting screen (toggled with E). */
+#inventory {
+  position: fixed; inset: 0; z-index: 12; display: none;
+  align-items: center; justify-content: center;
+  background: rgba(8, 12, 18, 0.72); backdrop-filter: blur(3px);
+}
+.inv-panel {
+  width: min(620px, 92vw); max-height: 88vh; overflow-y: auto;
+  background: rgba(22, 26, 32, 0.98); border: 2px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px; padding: 18px 20px; color: #fff;
+}
+.inv-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.inv-head h2 { font-size: 20px; letter-spacing: 2px; }
+.inv-close {
+  font: inherit; font-size: 13px; color: #fff; cursor: pointer;
+  padding: 6px 12px; border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.25);
+}
+.inv-close:hover { background: rgba(255, 255, 255, 0.16); }
+.inv-items { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.inv-item {
+  display: flex; align-items: center; gap: 7px;
+  padding: 6px 10px 6px 6px; border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.inv-item .swatch { width: 20px; height: 20px; border-radius: 3px; border: 1px solid rgba(0, 0, 0, 0.4); }
+.inv-item .lab { font-size: 12px; opacity: 0.85; }
+.inv-item .cnt { font-size: 14px; font-weight: 700; min-width: 16px; text-align: right; }
+.inv-panel h3 { font-size: 13px; letter-spacing: 2px; opacity: 0.7; margin: 6px 0 10px; }
+.inv-recipes { display: flex; flex-direction: column; gap: 8px; }
+.recipe {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 12px; border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.recipe.ready { border-color: rgba(120, 220, 120, 0.55); }
+.recipe.locked { opacity: 0.5; }
+.r-title { font-size: 14px; font-weight: 700; }
+.r-need { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+.r-btn {
+  font: inherit; font-weight: 700; font-size: 13px; color: #06210a; cursor: pointer;
+  padding: 8px 16px; border-radius: 8px; white-space: nowrap;
+  background: #5fd35f; border: none;
+}
+.r-btn:hover:not(:disabled) { background: #71e371; }
+.r-btn:disabled { background: rgba(255, 255, 255, 0.12); color: rgba(255, 255, 255, 0.45); cursor: not-allowed; }
+.inv-hint { margin-top: 14px; font-size: 11px; opacity: 0.5; text-align: center; }
+
+/* "New World" button on the start/pause overlay. */
+#newworld {
+  margin-top: 4px; font: inherit; font-size: 13px; color: #ffd0d0; cursor: pointer;
+  padding: 7px 16px; border-radius: 8px;
+  background: rgba(180, 40, 40, 0.18); border: 1px solid rgba(255, 120, 120, 0.5);
+}
+#newworld:hover { background: rgba(180, 40, 40, 0.32); }
+
+/* Shown only when localStorage is unavailable. */
+#savewarn {
+  position: fixed; right: 14px; bottom: 72px; z-index: 6; display: none;
+  max-width: 280px; font-size: 11px; line-height: 1.4; color: #ffe0a0;
+  padding: 8px 12px; border-radius: 8px;
+  background: rgba(60, 40, 0, 0.7); border: 1px solid rgba(255, 200, 100, 0.4);
+}
+
+/* "Force field active" banner (top-centre, under the mode pill). */
+#field {
+  position: fixed; top: 46px; left: 50%; transform: translateX(-50%); z-index: 6;
+  display: none; pointer-events: none;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.5px; color: #bfe6ff;
+  padding: 5px 14px; border-radius: 999px;
+  background: rgba(20, 80, 130, 0.55); border: 1px solid rgba(120, 200, 255, 0.6);
+  box-shadow: 0 0 12px rgba(70, 180, 255, 0.4);
+}
+
+/* Energy Stones carried (top-right, under the kill counter). */
+#energy {
+  position: fixed; top: 46px; right: 18px; z-index: 5; pointer-events: none;
+  font-size: 13px; font-weight: 700; letter-spacing: 1px; color: #d9b3ff;
+  padding: 4px 11px; border-radius: 8px;
+  background: rgba(40, 10, 60, 0.42); border: 1px solid rgba(180, 120, 255, 0.45);
+}
+
+/* Prompt shown by the dragon egg. */
+#eggprompt {
+  position: fixed; left: 50%; bottom: 112px; transform: translateX(-50%); z-index: 6;
+  display: none; pointer-events: none; white-space: nowrap;
+  font-size: 14px; font-weight: 600; color: #f0e0ff;
+  padding: 7px 16px; border-radius: 999px;
+  background: rgba(50, 15, 80, 0.72); border: 1px solid rgba(190, 130, 255, 0.6);
+  box-shadow: 0 0 14px rgba(150, 80, 255, 0.4);
+}
+
+/* Dragon boss health bar (top-centre). */
+#boss {
+  position: fixed; top: 76px; left: 50%; transform: translateX(-50%); z-index: 6;
+  display: none; pointer-events: none; width: 360px; max-width: 80vw; text-align: center;
+}
+#boss .boss-label {
+  font-size: 13px; font-weight: 800; letter-spacing: 2px; color: #d9a6ff;
+  text-shadow: 0 1px 3px #000; margin-bottom: 3px;
+}
+#boss .boss-bar {
+  height: 12px; border-radius: 7px; overflow: hidden;
+  background: rgba(0, 0, 0, 0.5); border: 2px solid rgba(190, 130, 255, 0.6);
+}
+#boss .boss-fill {
+  height: 100%; width: 100%;
+  background: linear-gradient(90deg, #8a2be2, #c060ff); transition: width 0.1s linear;
+}
+
+/* Weapon panel (bottom-left): gun name + ammo. Dimmed while holstered. */
+#weapon {
+  position: fixed; left: 18px; bottom: 18px; z-index: 5; pointer-events: none;
+  padding: 8px 14px; min-width: 124px; border-radius: 10px;
+  background: rgba(0, 0, 0, 0.40); border: 2px solid rgba(255, 255, 255, 0.18);
+  transition: opacity 0.15s;
+}
+#weapon.holstered { opacity: 0.4; }
+#weapon .gun-name { font-size: 12px; letter-spacing: 1px; text-transform: uppercase; opacity: 0.85; }
+#weapon .ammo { font-size: 30px; font-weight: 800; line-height: 1.05; text-shadow: 0 1px 3px #000; }
+#weapon .ammo span { font-size: 14px; font-weight: 600; opacity: 0.6; margin-left: 2px; }
+#weapon .ammo.empty { color: #ff6a5a; }
+
+/* Mode reminder pill (top-centre). */
+#mode {
+  position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 5;
+  pointer-events: none; font-size: 13px; padding: 5px 12px; border-radius: 999px;
+  background: rgba(0, 0, 0, 0.38); border: 1px solid rgba(255, 255, 255, 0.18);
+}
+#mode b { letter-spacing: 1px; }
+#mode kbd { min-width: 16px; padding: 0 5px; font-size: 11px; }
+
+/* Health bar (top-left). */
+#health {
+  position: fixed; top: 14px; left: 18px; z-index: 5; pointer-events: none; width: 220px;
+}
+#health .hp-bar {
+  height: 18px; border-radius: 9px; overflow: hidden;
+  background: rgba(0, 0, 0, 0.45); border: 2px solid rgba(255, 255, 255, 0.25);
+}
+#health .hp-fill {
+  height: 100%; width: 100%; background: #5fd35f;
+  transition: width 0.12s linear, background 0.2s;
+}
+#health .hp-num { margin-top: 3px; font-size: 12px; font-weight: 700; text-shadow: 0 1px 2px #000; }
+
+/* Health packs carried (top-left, under the health bar). */
+#packs {
+  position: fixed; top: 58px; left: 18px; z-index: 5; pointer-events: none; display: none;
+  font-size: 12px; font-weight: 700; color: #ffc2cc;
+  padding: 4px 11px; border-radius: 8px;
+  background: rgba(60, 10, 20, 0.42); border: 1px solid rgba(255, 120, 140, 0.45);
+}
+
+/* Kill counter (top-right). */
+#score {
+  position: fixed; top: 16px; right: 18px; z-index: 5; pointer-events: none;
+  font-size: 15px; font-weight: 700; letter-spacing: 1px;
+  padding: 5px 12px; border-radius: 8px;
+  background: rgba(0, 0, 0, 0.38); border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* Red damage vignette (whole screen; opacity set from JS on each bite). */
+#hurt {
+  position: fixed; inset: 0; z-index: 4; pointer-events: none; opacity: 0;
+  background: radial-gradient(ellipse at center, rgba(180, 0, 0, 0) 45%, rgba(180, 0, 0, 0.85) 100%);
+}
+
+/* Death overlay (shown on 0 health; respawn with R). */
+#death {
+  position: fixed; inset: 0; z-index: 11; display: none;
+  align-items: center; justify-content: center;
+  background: rgba(40, 0, 0, 0.55); backdrop-filter: blur(2px); pointer-events: none;
+}
+#death h2 { font-size: 44px; letter-spacing: 3px; color: #ff5a4a; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7); }
+#death p { margin-top: 10px; font-size: 16px; opacity: 0.9; }
